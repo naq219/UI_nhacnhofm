@@ -133,7 +133,7 @@ function HomePage() {
           reminders={reminders}
           onDelete={handleDeleteReminder}
           onEdit={handleEditReminder}
-          onComplete={handleCompleteReminder}
+          onToggleComplete={handleCompleteReminder}
         />
         
         <Snackbar

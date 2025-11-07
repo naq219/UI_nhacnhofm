@@ -106,6 +106,10 @@ export function EditReminderDialog({
         repeatInterval = 'Mỗi năm';
         repeatUnit = 'year';
         repeatValue = 1;
+      } else if (repeatType === 'lunar_last_day') {
+        repeatInterval = 'Cuối tháng Âm lịch';
+        repeatUnit = 'month';
+        repeatValue = 1;
       } else if (repeatType === 'custom' && customRepeat) {
         const match = customRepeat.match(/^(\d+)([pgnth])$/i);
         if (match) {
@@ -139,9 +143,16 @@ export function EditReminderDialog({
       next_trigger_at: startTime.toISOString(),
       type: isRecurring ? 'recurring' : 'one_time',
       calendar_type: calendarType,
+      recurrence_pattern: isRecurring ? {
+        type: repeatType === 'lunar_last_day' ? 'lunar_last_day_of_month' : repeatType,
+        ...(repeatType !== 'lunar_last_day' && {
+          frequency: repeatUnit,
+          interval: repeatValue
+        })
+      } : undefined,
+      repeat_strategy: enableRetry ? 'retry_until_complete' : 'none',
       retry_interval_sec: enableRetry ? retryIntervalSec : undefined,
       max_retries: enableRetry ? maxRetries : undefined,
-      // recurrence_pattern sẽ được xử lý sau nếu cần
     };
 
     onEditReminder(updatedReminder);
@@ -307,6 +318,12 @@ export function EditReminderDialog({
                       <RadioGroupItem value="yearly" id="edit-yearly" />
                       <Label htmlFor="edit-yearly" className="cursor-pointer">
                         Mỗi năm
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="lunar_last_day" id="edit-lunar_last_day" />
+                      <Label htmlFor="edit-lunar_last_day" className="cursor-pointer">
+                        Cuối tháng Âm lịch
                       </Label>
                     </div>
                   </div>

@@ -83,6 +83,10 @@ export function CreateReminderDialog({
         repeatInterval = 'Mỗi năm';
         repeatUnit = 'year';
         repeatValue = 1;
+      } else if (repeatType === 'lunar_last_day') {
+        repeatInterval = 'Cuối tháng Âm lịch';
+        repeatUnit = 'month';
+        repeatValue = 1;
       } else if (repeatType === 'custom' && customRepeat) {
         const match = customRepeat.match(/^(\d+)([pgnth])$/i);
         if (match) {
@@ -118,9 +122,13 @@ export function CreateReminderDialog({
       calendar_type: calendarType,
       next_trigger_at: startTime.toISOString(),
       recurrence_pattern: isRecurring ? {
-        frequency: repeatUnit,
-        interval: repeatValue
+        type: repeatType === 'lunar_last_day' ? 'lunar_last_day_of_month' : repeatType,
+        ...(repeatType !== 'lunar_last_day' && {
+          frequency: repeatUnit,
+          interval: repeatValue
+        })
       } : undefined,
+      repeat_strategy: enableRetry ? 'retry_until_complete' : 'none',
       status: 'active',
       retry_interval_sec: enableRetry ? retryIntervalSec : undefined,
       max_retries: enableRetry ? maxRetries : undefined,
@@ -302,6 +310,12 @@ export function CreateReminderDialog({
                       <RadioGroupItem value="yearly" id="yearly" />
                       <Label htmlFor="yearly" className="cursor-pointer">
                         Mỗi năm
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="lunar_last_day" id="lunar_last_day" />
+                      <Label htmlFor="lunar_last_day" className="cursor-pointer">
+                        Cuối tháng Âm lịch
                       </Label>
                     </div>
                   </div>
