@@ -18,14 +18,15 @@ export const apiClient = {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    // Log request details
-    console.log('📤 API Request:', {
-      url: `${API_BASE_URL}${endpoint}`,
-      method: options.method || 'GET',
-      headers: headers,
-      body: options.body ? JSON.stringify(options.body) : undefined,
+    const logEntry: any = {
       timestamp: new Date().toISOString(),
-    });
+      request: {
+        url: `${API_BASE_URL}${endpoint}`,
+        method: options.method || 'GET',
+        headers: headers,
+        body: options.body ? JSON.stringify(options.body) : undefined,
+      },
+    };
 
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       ...options,
@@ -40,14 +41,13 @@ export const apiClient = {
 
     const data = await response.json();
 
-    // Log response details
-    console.log('📥 API Response:', {
-      url: `${API_BASE_URL}${endpoint}`,
+    logEntry.response = {
       status: response.status,
       statusText: response.statusText,
       data: data,
-      timestamp: new Date().toISOString(),
-    });
+    };
+
+    console.log('API Call:', logEntry);
 
     if (!response.ok) {
       throw new Error(data.message || 'API Error');

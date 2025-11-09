@@ -34,6 +34,7 @@ function HomePage() {
       const data = await remindersAPI.getAll();
       const mappedReminders = data.items.map(r => ({
         ...r,
+        next_trigger_at: r.next_recurring !== "0001-01-01T00:00:00Z" ? r.next_recurring : r.next_crp,
         isCompleted: r.status === 'completed',
       }));
       setReminders(mappedReminders);
