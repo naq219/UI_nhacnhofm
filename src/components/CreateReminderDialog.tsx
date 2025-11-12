@@ -115,24 +115,70 @@ export function CreateReminderDialog({
       }
     }
 
-    onCreateReminder({
+    // Map theo tài liệu RemiAq v4
+    const payload: any = {
       title: content,
       description: '',
       type: isRecurring ? 'recurring' : 'one_time',
       calendar_type: calendarType,
-      next_trigger_at: startTime.toISOString(),
-      recurrence_pattern: isRecurring ? {
-        type: repeatType === 'lunar_last_day' ? 'lunar_last_day_of_month' : repeatType,
-        ...(repeatType !== 'lunar_last_day' && {
-          frequency: repeatUnit,
-          interval: repeatValue
-        })
-      } : undefined,
-      repeat_strategy: enableRetry ? 'retry_until_complete' : 'none',
+      next_action_at: startTime.toISOString(),
       status: 'active',
-      retry_interval_sec: enableRetry ? retryIntervalSec : undefined,
-      max_retries: enableRetry ? maxRetries : undefined,
-    });
+    };
+
+    if (isRecurring) {
+      if (repeatType === 'lunar_last_day') {
+        payload.recurrence_pattern = { type: 'lunar_last_day_of_month', interval: 1 };
+      } else if (repeatType === 'daily') {
+        payload.recurrence_pattern = { type: 'daily', interval: 1 };
+      } else if (repeatType === 'weekly') {
+        payload.recurrence_pattern = {
+          type: 'weekly',
+          interval: 1,
+          day_of_week: startTime.getUTCDay(),
+        };
+      } else if (repeatType === 'monthly') {
+        payload.recurrence_pattern = {
+          type: 'monthly',
+          interval: 1,
+          day_of_month: startTime.getUTCDate(),
+        };
+      } else if (repeatType === 'yearly') {
+        // Tài liệu chưa hỗ trợ yearly; tạm ánh xạ sang monthly mỗi 12 tháng
+        payload.recurrence_pattern = {
+          type: 'monthly',
+          interval: 12,
+          day_of_month: startTime.getUTCDate(),
+        };
+      } else if (repeatType === 'custom' && customRepeat) {
+        const match = customRepeat.match(/^(\d+)([pgnth])$/i);
+        if (match) {
+          const val = parseInt(match[1]);
+          const unit = match[2].toLowerCase();
+          let seconds = 0;
+          if (unit === 'p') seconds = val * 60; // phút
+          else if (unit === 'g') seconds = val * 3600; // giờ
+          else if (unit === 'n') seconds = val * 86400; // ngày
+          else if (unit === 't') seconds = val * 604800; // tuần
+          else if (unit === 'h') seconds = val * 2592000; // tháng ~30d
+          if (seconds <= 0) {
+            toast.error('Giá trị khoảng lặp không hợp lệ');
+            return;
+          }
+          payload.recurrence_pattern = { type: 'interval_seconds', interval_seconds: seconds };
+        } else {
+          toast.error('Định dạng không hợp lệ. Ví dụ: 1p, 2g, 3n, 1t, 6h');
+          return;
+        }
+      }
+
+      payload.repeat_strategy = enableRetry ? 'crp_until_complete' : 'none';
+      if (enableRetry) {
+        payload.crp_interval_sec = retryIntervalSec;
+        payload.max_crp = maxRetries;
+      }
+    }
+
+    onCreateReminder(payload);
     toast.success('Đã tạo nhắc nhở mới');
     handleReset();
     onOpenChange(false);
