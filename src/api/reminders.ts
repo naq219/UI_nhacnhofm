@@ -12,8 +12,7 @@ export const remindersAPI = {
   },
 
   async create(data: CreateReminderDTO): Promise<Reminder> {
-    const res = await apiClient.post('/api/reminders', data);
-    return res.data;
+    return apiClient.post('/api/reminders', data);
   },
 
   async update(id: string, data: Partial<CreateReminderDTO>): Promise<Reminder> {
